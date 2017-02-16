@@ -1,5 +1,5 @@
 # Site settings
-title: ·杰╮(๑•́ ₃•̀๑)╭ 
+title: Jie
 SEOTitle: 杰 | ╮(๑•́ ₃•̀๑)╭ 
 header-img: img/home-bg.jpg
 email: chjie93@gmail.com
@@ -68,7 +68,7 @@ ga_domain: auto
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "hey,man. what`s up? "
+sidebar-about-description: "· 随便写写、记录记录"
 sidebar-avatar: /img/avatar-hux.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
