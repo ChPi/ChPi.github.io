@@ -1,0 +1,43 @@
+---
+layout:     post
+title:      "scala学习记录"
+subtitle:   "协变、逆变"
+date:       2017-02-15
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - scala
+---
+
+>最近看spark源码，发现协变、逆变不是很理解. 自己做了几个实验加强理解.
+
+### 实验一
+```
+scala> class Test[+T](var a: T)
+<console>:11: error: covariant type T occurs in contravariant position in type T of value a_=
+       class Test[+T](var a: T)
+scala> class Test[+T](val a: T)
+defined class Test
+```
+可以看到协变定义的时候，变量a只能定义为不可变。
+
+原因如下：
+```
+val test1 = new Test[String]
+val test2 : Test[Any] = test1
+test2.list = List[Any]()
+//test2.a其实是String 如果允许改变，就能将Any赋值给String
+```
+
+### 实验二
+```
+scala> class Test[-T](var a: T)
+<console>:11: error: contravariant type T occurs in covariant position in type => T of method a
+       class Test[-T](var a: T)
+                          ^
+scala> class Test[-T](val a: T)
+<console>:11: error: contravariant type T occurs in covariant position in type => T of value a
+       class Test[-T](val a: T)
+```
+同样，逆变根本就不允许内部变量定义为T，因为如果这个定义成立，
+那么Test[Any] 是Test[String]的子类，Any能赋值给String
