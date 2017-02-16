@@ -68,7 +68,7 @@ ga_domain: auto
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "chjie93@.gmail.com"
+sidebar-about-description: "chjie93@gmail.com"
 sidebar-avatar: /img/icon_wechat.png     # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
