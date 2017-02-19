@@ -14,7 +14,7 @@ tags:
 ### 模型定义
 具体定义参考原始论文,这里使用平滑模型，对topic-word也加了先验信息。
 
-![ldamodel](/img/lda/lda-vb-model.png)
+![ldamodel](/img/post/lda/lda-vb-model.png)
 <small class="img-hint">LDA图模型</small>
 
 ### 引理
