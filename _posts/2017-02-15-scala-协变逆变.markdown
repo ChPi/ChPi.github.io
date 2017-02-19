@@ -39,5 +39,14 @@ scala> class Test[-T](val a: T)
 <console>:11: error: contravariant type T occurs in covariant position in type => T of value a
        class Test[-T](val a: T)
 ```
-同样，逆变根本就不允许内部变量定义为T，因为如果这个定义成立，
-那么Test[Any] 是Test[String]的子类，Any能赋值给String
+同样，逆变不允许内部变量定义为T，因为如果这个定义成立，
+那么Test[Any] 是Test[String]的子类，Any能赋值给String。
+#### 逆变使用情况
+逆变不能直接赋值，但可以根据反函数，可以赋给参数(函数参数)
+```
+scala> class Test[-T](val f: T => String)
+defined class Test
+scala> val test: Test[String] = new Test((a: Any) => a.toString)
+test: Test[String] = Test@731f8236
+```
+f不能定义为var的原因与协变类似。
