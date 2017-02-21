@@ -1,0 +1,114 @@
+---
+layout:     post
+title:      "spark踩坑日记【1】"
+subtitle:   " 一直运行，不愿结束，或许直到永远、永远～～～"
+date:       2017-02-16
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - spark
+---
+
+> 几个月以来，这个任务都是7分钟就跑完，结果过去了5小时还在跑
+
+任务是hive到HBase，有几个逻辑，在第一逻辑执行完后用了cache。
+
+难以重现也是忧伤。。。
+
+#### Driver log
+
+```
+17/02/21 05:27:10 INFO cluster.YarnClusterScheduler: Removed TaskSet 14.0, whose tasks have all completed, from pool
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: ShuffleMapStage 14 (cache at xxx.scala:33) finished in 10.344 s
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: looking for newly runnable stages
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: running: Set()
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: waiting: Set(ShuffleMapStage 19, ResultStage 20, ShuffleMapStage 18)
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: failed: Set(ShuffleMapStage 16, ShuffleMapStage 17, ShuffleMapStage 7, ShuffleMapStage 8)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_62_piece0 on 10.26.69.99:58572 in memory (size: 30.4 KB, free: 1139.1 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_62_piece0 on emr-worker-3.cluster-31037:60988 in memory (size: 30.4 KB, free: 1247.1 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_62_piece0 on emr-worker-1.cluster-31037:52149 in memory (size: 30.4 KB, free: 1246.4 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_62_piece0 on emr-worker-2.cluster-31037:50035 in memory (size: 30.4 KB, free: 1246.3 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_61_piece0 on 10.26.69.99:58572 in memory (size: 16.0 KB, free: 1139.1 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_61_piece0 on emr-worker-1.cluster-31037:52149 in memory (size: 16.0 KB, free: 1246.5 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_61_piece0 on emr-worker-3.cluster-31037:60988 in memory (size: 16.0 KB, free: 1247.1 MB)
+17/02/21 05:35:10 INFO storage.BlockManagerInfo: Removed broadcast_61_piece0 on emr-worker-2.cluster-31037:50035 in memory (size: 16.0 KB, free: 1246.3 MB)
+17/02/21 05:40:32 INFO storage.BlockManagerInfo: Removed broadcast_60_piece0 on 10.26.69.99:58572 in memory (size: 52.4 KB, free: 1139.1 MB)
+17/02/21 05:40:32 INFO storage.BlockManagerInfo: Removed broadcast_60_piece0 on emr-worker-2.cluster-31037:50035 in memory (size: 52.4 KB, free: 1246.4 MB)
+17/02/21 05:40:32 INFO storage.BlockManagerInfo: Removed broadcast_60_piece0 on emr-worker-1.cluster-31037:52149 in memory (size: 52.4 KB, free: 1246.5 MB)
+17/02/21 05:40:32 INFO storage.BlockManagerInfo: Removed broadcast_60_piece0 on emr-worker-3.cluster-31037:60988 in memory (size: 52.4 KB, free: 1247.2 MB)
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 72
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 71
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 70
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 69
+17/02/21 05:40:32 INFO storage.BlockManagerInfo: Removed broadcast_8_piece0 on 10.26.69.99:58572 in memory (size: 53.6 KB, free: 1139.2 MB)
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned shuffle 8
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 64
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 63
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 62
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 61
+17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 60
+```
+
+中间日志有些报错，都是内存不足被yarn kill了，已经习惯了。
+
+最后的日志是清理累加器，看不出什么，也没其他错，注意是卡在cache(33行代码，这是后已经执行了17分钟)。
+
+#### jstack
+
+shuffle-server线程处于RUNNABLE，还在运行（线程未正常关闭？）；
+
+一些NIO的线程也处于RUNNABLE。
+
+#### 各种分析
+
+没结果
+
+#### 查查查
+
+spark导致hang的bug挺多的
+
+1.
+
+> https://issues.apache.org/jira/browse/SPARK-4395
+
+环境不同，spark版本不同，但很相似的问题，sql之后加了cache，由于无法重现关闭了。
+
+2.
+
+> http://stackoverflow.com/questions/39723197/spark-job-randomly-hangs-int-the-middle-of-a-stage-while-reading-data
+
+动态分配的锅？
+
+3.
+
+> https://issues.apache.org/jira/browse/SPARK-15000
+
+cache然后show出问题，无法重现关闭
+
+4.
+
+> https://issues.apache.org/jira/browse/SPARK-15002
+
+使用unpersist出现了类似问题，open状态
+
+5.
+
+> https://issues.apache.org/jira/browse/SPARK-15673
+还是缓存，open状态
+
+6.
+> https://issues.apache.org/jira/browse/SPARK-18972
+> https://github.com/apache/spark/pull/16380
+> Make ShuffleBlockFetcherIterator throw NoSuchElementException if it has no more elements. Otherwise, if the caller calls next without hasNext
+
+如果没有下一个元素，hang the thread，修复版本还没release（2.0.3, 2.1.1, 2.2.0）
+
+7.
+
+> https://issues.apache.org/jira/browse/SPARK-13931
+
+executor挂掉导致stage hang up
+
+8.
+
+> http://search-hadoop.com/m/Spark/q3RTtfzIqO1eLFam1?subj=Re+Spark+SQL+queries+hang+forever
