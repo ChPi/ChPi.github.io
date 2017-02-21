@@ -51,7 +51,7 @@ tags:
 
 中间日志有些报错，都是内存不足被yarn kill了，已经习惯了。
 
-最后的日志是清理累加器，看不出什么，也没其他错，注意是卡在cache(33行代码，这是后已经执行了17分钟)。
+最后的日志是清理累加器，看不出什么，也没其他错，注意是卡在cache（33行代码，这时候已经执行了17分钟）。
 
 #### jstack
 
@@ -94,11 +94,15 @@ cache然后show出问题，无法重现关闭
 5.
 
 > https://issues.apache.org/jira/browse/SPARK-15673
+
 还是缓存，open状态
 
 6.
+
 > https://issues.apache.org/jira/browse/SPARK-18972
+
 > https://github.com/apache/spark/pull/16380
+
 > Make ShuffleBlockFetcherIterator throw NoSuchElementException if it has no more elements. Otherwise, if the caller calls next without hasNext
 
 如果没有下一个元素，hang the thread，修复版本还没release（2.0.3, 2.1.1, 2.2.0）
