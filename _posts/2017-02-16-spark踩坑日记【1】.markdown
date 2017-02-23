@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "spark踩坑日记【1】"
+title:      "spark踩坑日记「1」"
 subtitle:   " 一直运行，不愿结束，或许直到永远、永远～～～"
 date:       2017-02-16
 author:     "Jie"
@@ -9,7 +9,7 @@ tags:
     - spark
 ---
 
-> 几个月以来，这个任务都是7分钟就跑完，结果过去了5小时还在跑
+> 几个月以来，这个任务都是10几分钟就跑完，结果过去了5小时还在跑
 
 任务是hive到HBase，有几个逻辑，在第一逻辑执行完后用了cache。
 
@@ -49,70 +49,51 @@ tags:
 17/02/21 05:40:32 INFO spark.ContextCleaner: Cleaned accumulator 60
 ```
 
-中间日志有些报错，都是内存不足被yarn kill了，已经习惯了。
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: failed: Set(ShuffleMapStage 16, ShuffleMapStage 17, ShuffleMapStage 7, ShuffleMapStage 8)
+后面没有log了，应该会提交waiting: Set(ShuffleMapStage 19, ResultStage 20, ShuffleMapStage 18)中的一个shuffle stage。但是没有。
+
+中间日志有些报错，都是内存不足被yarn kill了。
 
 最后的日志是清理累加器，看不出什么，也没其他错，注意是卡在cache（33行代码，这时候已经执行了17分钟）。
 
 #### jstack
 
-shuffle-server线程处于RUNNABLE，还在运行（线程未正常关闭？）；
-
-一些NIO的线程也处于RUNNABLE。
-
-#### 各种分析
-
-没结果
+没发现死循环、死锁异常；
 
 #### 查查查
 
 spark导致hang的bug挺多的
 
-1.
+* 环境不同，spark版本不同，但很相似的问题，sql之后加了cache，由于无法重现关闭了。
 
 > https://issues.apache.org/jira/browse/SPARK-4395
 
-环境不同，spark版本不同，但很相似的问题，sql之后加了cache，由于无法重现关闭了。
 
-2.
+
+* 动态分配的锅？
 
 > http://stackoverflow.com/questions/39723197/spark-job-randomly-hangs-int-the-middle-of-a-stage-while-reading-data
 
-动态分配的锅？
-
-3.
+* cache然后show出问题，无法重现关闭
 
 > https://issues.apache.org/jira/browse/SPARK-15000
 
-cache然后show出问题，无法重现关闭
-
-4.
+* 使用unpersist出现了类似问题，open状态
 
 > https://issues.apache.org/jira/browse/SPARK-15002
 
-使用unpersist出现了类似问题，open状态
-
-5.
+* 还是缓存，open状态
 
 > https://issues.apache.org/jira/browse/SPARK-15673
 
-还是缓存，open状态
+* 如果没有下一个元素，hang the thread，修复版本还没release（2.0.3, 2.1.1, 2.2.0）
 
-6.
+> Make ShuffleBlockFetcherIterator throw NoSuchElementException if it has no more elements. Otherwise, if the caller calls next without hasNext
 
 > https://issues.apache.org/jira/browse/SPARK-18972
 
 > https://github.com/apache/spark/pull/16380
 
-> Make ShuffleBlockFetcherIterator throw NoSuchElementException if it has no more elements. Otherwise, if the caller calls next without hasNext
-
-如果没有下一个元素，hang the thread，修复版本还没release（2.0.3, 2.1.1, 2.2.0）
-
-7.
+* executor挂掉导致stage hang up
 
 > https://issues.apache.org/jira/browse/SPARK-13931
-
-executor挂掉导致stage hang up
-
-8.
-
-> http://search-hadoop.com/m/Spark/q3RTtfzIqO1eLFam1?subj=Re+Spark+SQL+queries+hang+forever
