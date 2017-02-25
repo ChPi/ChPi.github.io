@@ -1,15 +1,15 @@
 ---
 layout:     post
-title:      "scala学习记录"
+title:      "Scala学习记录"
 subtitle:   "协变、逆变"
 date:       2017-02-15
 author:     "Jie"
 header-img: "img/post-bg-scala-version.jpg"
 tags:
-    - scala
+    - Scala
 ---
 
->最近看spark源码，发现协变、逆变不是很理解. 做了几个实验加强理解.
+>最近看Spark源码，发现协变、逆变不是很理解. 做了几个实验加强理解.
 
 ### 实验一
 ```

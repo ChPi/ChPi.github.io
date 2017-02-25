@@ -6,7 +6,7 @@ date:       2017-02-13
 author:     "Jie"
 header-img: "img/math2.jpg"
 tags:
-    - ml
+    - ML
 ---
 
 > 熟悉熟悉公式插件，整理整理学习LDA模型的时候对参数推导的理解，与原始论文有所不同。
