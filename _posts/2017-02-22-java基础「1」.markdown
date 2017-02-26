@@ -117,14 +117,23 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
                     break;                   // no lock when adding to empty bin
             }
 ```
+
+```
+static final <K,V> boolean casTabAt(Node<K,V>[] tab, int i,
+                                        Node<K,V> c, Node<K,V> v) {
+        return U.compareAndSwapObject(tab, ((long)i << ASHIFT) + ABASE, c, v);
+    }
+```
 > https://en.wikipedia.org/wiki/Compare-and-swap
 CAS是硬件层面的原子操作，其实还是安全。
 
 **扩容的时候死循环？**
 
-扩容分两步，生产新的容器和移动元素。
+扩容分两步，生成新的容器和移动元素。
 
-只能有一个线程对容器扩容，但是可以多个线程转移元素。
+只能有一个线程对容器扩容，但是可以多个线程转移元素，转移的时候，线程都会对桶上锁。
+
+所以不会发生类似HashMap的死循环。
 
 **所以只需要注意程序的线程安全**
 
@@ -135,6 +144,8 @@ if (!map.containsKey(key))
 else
    return map.get(key);
 ```
+
+这种情况就直接使用onlyIfAbsent方法
 
 ## Hashtable
 
