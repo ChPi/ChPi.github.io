@@ -1,11 +1,11 @@
 # Site settings
 title: 杰、
-SEOTitle: Jie Blog| 天凉好个秋
+SEOTitle: Jie Blog | 天凉好个秋
 header-img: img/home-bg.jpg
 email: chjie93@gmail.com
 description: "hey,man. "
 keyword: ""
-url: "http://ChPi.github.io"              # your host, for absolute URL
+url: "xjiex.com"              # your host, for absolute URL
 baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 
 
