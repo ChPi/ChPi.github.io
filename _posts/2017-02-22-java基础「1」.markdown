@@ -33,6 +33,81 @@ HashMap不是线程安全，会导致数据不一致和死循环(resize)。
 
 put的时候每个桶一个锁。
 
+```java
+final V putVal(K key, V value, boolean onlyIfAbsent) {
+        if (key == null || value == null) throw new NullPointerException();
+        int hash = spread(key.hashCode());
+        int binCount = 0;
+        for (Node<K,V>[] tab = table;;) {
+            Node<K,V> f; int n, i, fh;
+
+            // table不存在
+            if (tab == null || (n = tab.length) == 0)
+                tab = initTable();
+            // 桶里没元素直接插入
+            else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+                if (casTabAt(tab, i, null,
+                             new Node<K,V>(hash, key, value, null)))
+                    break;                   // no lock when adding to empty bin
+            }
+            // 扩容后正在转移数据，加入转移过程
+            // 转移的时候table中head节点为ForwardingNode，hash就为moved
+            else if ((fh = f.hash) == MOVED)
+                tab = helpTransfer(tab, f);
+            else {
+                V oldVal = null;
+                synchronized (f) {
+                    // 为了线程安全还需要if
+                    if (tabAt(tab, i) == f) {
+                        // 红黑树的hash=-2
+                        if (fh >= 0) {
+                            binCount = 1;
+                            for (Node<K,V> e = f;; ++binCount) {
+                                K ek;
+                                if (e.hash == hash &&
+                                    ((ek = e.key) == key ||
+                                     (ek != null && key.equals(ek)))) {
+                                    oldVal = e.val;
+                                    if (!onlyIfAbsent)
+                                        e.val = value;
+                                    break;
+                                }
+                                Node<K,V> pred = e;
+                                if ((e = e.next) == null) {
+                                    pred.next = new Node<K,V>(hash, key,
+                                                              value, null);
+                                    break;
+                                }
+                            }
+                        }
+                        else if (f instanceof TreeBin) {
+                            Node<K,V> p;
+                            binCount = 2;
+                            if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
+                                                           value)) != null) {
+                                oldVal = p.val;
+                                if (!onlyIfAbsent)
+                                    p.val = value;
+                            }
+                        }
+                    }
+                }
+                if (binCount != 0) {
+                    // 转为红黑树
+                    if (binCount >= TREEIFY_THRESHOLD)
+                        treeifyBin(tab, i);
+                    if (oldVal != null)
+                        return oldVal;
+                    break;
+                }
+            }
+        }
+        // 增加元素个数，并判断扩容
+        addCount(1L, binCount);
+        return null;
+    }
+```
+
 但是当桶为空的时候，没有加锁，这时候如果多线程，并且多个key分到这个桶，线程不安全？
 
 ```
@@ -51,46 +126,6 @@ CAS是硬件层面的原子操作，其实还是安全。
 
 只能有一个线程对容器扩容，但是可以多个线程转移元素。
 
-```
-private final void addCount(long x, int check) {
-        CounterCell[] as; long b, s;
-        if ((as = counterCells) != null ||
-            !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
-            CounterCell a; long v; int m;
-            boolean uncontended = true;
-            if (as == null || (m = as.length - 1) < 0 ||
-                (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
-                !(uncontended =
-                  U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
-                fullAddCount(x, uncontended);
-                return;
-            }
-            if (check <= 1)
-                return;
-            s = sumCount();
-        }
-        if (check >= 0) {
-            Node<K,V>[] tab, nt; int n, sc;
-            while (s >= (long)(sc = sizeCtl) && (tab = table) != null &&
-                   (n = tab.length) < MAXIMUM_CAPACITY) {
-                int rs = resizeStamp(n);
-                if (sc < 0) {
-                    if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
-                        sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
-                        transferIndex <= 0)
-                        break;
-                    if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1))
-                        transfer(tab, nt);
-                }
-                else if (U.compareAndSwapInt(this, SIZECTL, sc,
-                                             (rs << RESIZE_STAMP_SHIFT) + 2))
-                    transfer(tab, null);
-                s = sumCount();
-            }
-        }
-    }
-```
-
 **所以只需要注意程序的线程安全**
 
 下面这种可能就不是想要的结果
@@ -101,6 +136,8 @@ else
    return map.get(key);
 ```
 
+## Hashtable
 
+put方法直接被synchronized
 
 
