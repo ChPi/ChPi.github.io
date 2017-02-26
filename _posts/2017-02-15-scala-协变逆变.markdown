@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Scala学习记录"
+title:      "Scala学习记录「1」"
 subtitle:   "协变、逆变"
 date:       2017-02-15
 author:     "Jie"
