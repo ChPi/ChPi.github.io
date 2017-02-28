@@ -1,0 +1,44 @@
+---
+layout:     post
+title:      "各种异常"
+subtitle:   " Hadoop、Spark、Java ···"
+date:       2017-02-28
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - NULL
+---
+
+## Java
+
+### A fatal error has been detected by the Java Runtime Environment
+
+> java 1.7.0_65
+Hadoop 2.3
+
+启动dfs和yarn集群报错,机器内存2g，启动了yarn，剩余内存还有1g,启动dfs失败。类似下面错误
+
+```
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007f7109914049, pid=8570, tid=140123318765312
+#
+# JRE version: Java(TM) SE Runtime Environment (7.0_65-b17) (build 1.7.0_65-b17)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (24.65-b04 mixed mode linux-amd64 compressed oops)
+# Problematic frame:
+# V  [libjvm.so+0x840049]  Parse:lock:uccessor_for_bci(int)+0x19
+#
+# Core dump written. Default location: /home/hadoop-2.3/core or core.8570
+#
+# An error report file with more information is saved as:
+# /home/hadoop-2.3/hs_err_pid8570.log
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+#
+```
+
+**解决方法**
+
+减小dataNode、nodeManager等每个jvm进程的xmx参数了
