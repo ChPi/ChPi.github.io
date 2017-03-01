@@ -6,7 +6,7 @@ date:       2017-02-28
 author:     "Jie"
 header-img: "img/post-bg-scala-version.jpg"
 tags:
-    - NULL
+    - Null
 ---
 
 ## Java
