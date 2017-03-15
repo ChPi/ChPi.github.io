@@ -43,8 +43,11 @@ PUT  test
 添加语料，文本有title和content字段。
 
 **定制自己的模型算法脚本**
+
 这里假设title长度、content长度和自带评分与我们想要的最终结果成线性关系。
 那么对其中每一个因素一个权重CW、TW、SW。
+
+算法脚本(Python更佳)
 ```
 public class TestScript extends Plugin implements ScriptPlugin {
 
