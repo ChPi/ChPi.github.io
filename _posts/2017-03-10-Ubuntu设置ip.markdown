@@ -1,0 +1,40 @@
+---
+layout:     post
+title:      "Ubuntu设置IP"
+subtitle:   ""
+date:       2017-02-15
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - Unix-like
+---
+
+## 一、 确认IP
+ping一下，看存不存在。
+
+## 二、设置IP
+
+### Windows
+Windows下设置IP很简单
+
+![Windows-DNS](img/post/2017-03-10-1/windows-dns.png)
+
+### Ubuntu
+
+**临时生效**
+```
+sudo ifconfig ens33 172.16.50.168 netmask 255.255.0.0
+```
+
+重启后就失效
+
+**修改配置**
+```
+sudo vi /etc/network/interfaces
+```
+![Setting](img/post/2017-03-10-1/02.png)
+
+执行命令
+```
+sudo service networking restart
+```
