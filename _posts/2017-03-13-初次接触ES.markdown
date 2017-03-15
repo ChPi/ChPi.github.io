@@ -1,0 +1,179 @@
+---
+layout:     post
+title:      "学习ES"
+subtitle:   " 修改ES自带评分模型算法"
+date:       2017-02-28
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - Elasticsearch
+---
+
+> 最近做项目需要用到ES。这里需要修改ES自带评分模型算法。
+
+## 目地
+
+添加脚本修改_score，例如，从几篇文章搜索特定关键字的文章，并且传入权重根据title长度，内容长度排序。
+
+
+## 实践
+
+首先肯定需要用到中文分词
+> https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-smartcn.html
+
+然后
+
+```
+PUT  test
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "default": {
+            "type": "smartcn"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+添加语料，文本有title和content字段。
+
+**定制自己的模型算法脚本**
+这里假设title长度、content长度和自带评分与我们想要的最终结果成线性关系。
+那么对其中每一个因素一个权重CW、TW、SW。
+```
+public class TestScript extends Plugin implements ScriptPlugin {
+
+
+    @Override
+    public List<NativeScriptFactory> getNativeScripts() {
+        NativeScriptFactory nativeScriptFactory = new LengthNativeScriptFactory();
+        return Collections.singletonList(nativeScriptFactory);
+    }
+
+    public static class LengthNativeScriptFactory implements NativeScriptFactory {
+        @Override
+        public ExecutableScript newScript(@Nullable Map<String, Object> params) {
+            return new MyNativeScript(params);
+        }
+        @Override
+        public boolean needsScores() {
+            return true;
+        }
+        @Override
+        public String getName() {
+            return "length_score";
+        }
+    }
+
+    public static class MyNativeScript extends AbstractDoubleSearchScript {
+        protected Map<String, Object> params;
+        public MyNativeScript(Map<String, Object> params) {
+            this.params = params;
+        }
+
+        @Override
+        public double runAsDouble() {
+            long contentLength = source().get("content").toString().length();
+            long titleLength = source().get("title").toString().length();
+            Float esScore = null;
+            try {
+                esScore = score();
+            } catch (IOException e) {
+                esScore = 0f;
+            }
+
+            Double contentWeight = (Double) params.get("CW");
+            Double titleWeight = (Double) params.get("TW");
+            Double scoreWeight = (Double) params.get("SW");
+
+            double contentScore =  computeScore(contentWeight, contentLength);
+            double titleScore = computeScore(titleWeight, titleLength);
+            double score = computeScore(scoreWeight, esScore);
+            return contentScore + titleScore + score;
+        }
+
+        private double computeScore(Double weight, long x) {
+            if (weight == null) {
+                return 0;
+            }
+            return weight * x;
+        }
+
+        private double computeScore(Double weight, Float x) {
+            if (weight == null || x == null) {
+                return 0;
+            }
+            return weight * x;
+        }
+    }
+
+}
+```
+
+开始搜索
+
+```
+{
+    "query" : {
+        "function_score": {
+      "query": {
+        "match": {
+          "content": "分布 语言"
+        }
+      },
+      "functions": [
+        {
+          "script_score": {
+            "script": {
+                "params": {
+            "CW": 0.0,
+            "TW": 0.0,
+            "SW": 1.0
+        },
+                "inline": "length_score",
+                "lang" : "native"
+            }
+          }
+        }
+      ]
+    }
+    }
+}
+```
+
+```
+{
+    "query" : {
+        "function_score": {
+      "query": {
+        "match": {
+          "content": "分布 语言"
+        }
+      },
+      "functions": [
+        {
+          "script_score": {
+            "script": {
+                "params": {
+            "CW": 1.0,
+            "TW": 1.0,
+            "SW": 1.0
+        },
+                "inline": "length_score",
+                "lang" : "native"
+            }
+          }
+        }
+      ]
+    }
+    }
+}
+```
+
+查看返回结果。
+嗯，是预期的结果。
