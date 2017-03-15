@@ -17,7 +17,7 @@ ping一下，看存不存在。
 ### Windows
 Windows下设置IP很简单
 
-![Windows-DNS](img/post/2017-03-10-1/windows-dns.png)
+![Windows-DNS](/img/post/2017-03-10-1/windows-dns.png)
 
 ### Ubuntu
 
@@ -32,7 +32,7 @@ sudo ifconfig ens33 172.16.50.168 netmask 255.255.0.0
 ```
 sudo vi /etc/network/interfaces
 ```
-![Setting](img/post/2017-03-10-1/02.png)
+![Setting](/img/post/2017-03-10-1/02.png)
 
 执行命令
 ```
