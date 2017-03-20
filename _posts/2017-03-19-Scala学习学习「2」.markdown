@@ -1,0 +1,72 @@
+---
+layout:     post
+title:      "Scala学习记录「2」"
+subtitle:   "类型推断"
+date:       2017-02-15
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - Scala
+---
+
+> 看了以前自己代码，发现下面例子。好智能，不用协变都能满足需求。
+
+情景
+
+```
+scala> class A
+defined class A
+
+scala> class B extends A
+defined class B
+
+scala> class C[T]
+defined class C
+
+scala> object C{def apply[T](t: T) = new C[T]}
+defined object C
+
+scala> def f(x: C[A]) = 1
+f: (x: C[A])Int
+
+cala> f(C(new B))
+res15: Int = 1
+
+scala> val x = C(new B)
+x: C[B] = C@30ec211a
+
+scala> f(x)
+<console>:18: error: type mismatch;
+ found   : C[B]
+ required: C[A]
+Note: B <: A, but class C is invariant in type T.
+You may wish to define T as +T instead. (SLS 4.5)
+       f(x)
+```
+
+写在一起，类型推断就能加入了下文信息自动把Array(new B)当成Array[A](new B)
+
+如果不使用类型推断，f(C(new B))那就需要写成
+```
+val b: A = new B
+
+val cb: C[A] = C(b)
+
+f(cb)
+
+```
+
+或者定义协变
+```
+scala> class C[+T]
+
+scala> val x = C(new B)
+x: C[B] = C@17550481
+
+scala> f(x)
+res0: Int = 1
+
+```
+
+## 类型推断
+
