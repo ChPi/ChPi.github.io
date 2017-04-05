@@ -15,6 +15,8 @@ tags:
 
 难以重现也是忧伤。。。
 
+spark 1.6.1 jdk8
+
 #### Driver log
 
 ```
@@ -58,7 +60,7 @@ tags:
 17/02/21 10:47:26 INFO handler.ContextHandler: stopped o.s.j.s.ServletContextHandler{/
 ```
 
-17/02/21 05:27:10 INFO scheduler.DAGScheduler: failed: Set(ShuffleMapStage 16, ShuffleMapStage 17, ShuffleMapStage 7, ShuffleMapStage 8)
+17/02/21 05:27:10 INFO scheduler.DAGScheduler: failed: Set\(ShuffleMapStage 16, ShuffleMapStage 17, ShuffleMapStage 7, ShuffleMapStage 8\)
 后面没有log了，应该会提交waiting: Set（ShuffleMapStage 19, ResultStage 20, ShuffleMapStage 18）中的一个shuffle stage。但是没有。
 
 中间日志有些报错，都是内存不足被Yarn kill了。
