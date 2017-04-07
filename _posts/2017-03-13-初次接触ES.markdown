@@ -180,3 +180,214 @@ public class TestScript extends Plugin implements ScriptPlugin {
 
 查看返回结果。
 嗯，是预期的结果。
+
+
+## 优化改进
+
+我们业务上这样搜索，当索引达到10w的时候就变得很慢，一次搜索需要5、600ms。只能改进，下面定制我们自己的搜索策略，替换es默认搜索BM25。
+
+#### VSMPulugin.java
+```
+import org.elasticsearch.index.IndexModule;
+import org.elasticsearch.plugins.Plugin;
+
+/**
+ * Created by chen jie on 4/1/17 10:23 AM.
+ */
+public class VSMPulugin extends Plugin {
+    public void onIndexModule(IndexModule indexModule) {
+        indexModule.addSimilarity("vsm", VSMSimilarityProvider::new);
+    }
+}
+```
+
+#### VSMSimilarity.java
+```
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.TermStatistics;
+import org.apache.lucene.search.similarities.Similarity;
+import org.apache.lucene.util.BytesRef;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by chen jie on 4/1/17 10:20 AM.
+ */
+public class VSMSimilarity extends Similarity {
+    public VSMSimilarity() {}
+
+    @Override
+    public long computeNorm(FieldInvertState fieldInvertState) {
+        // 不使用norm
+        return 1;
+    }
+
+    @Override
+    public SimWeight computeWeight(CollectionStatistics collectionStats, TermStatistics... termStats) {
+        return new VSMStats(collectionStats.field(), termStats);
+    }
+
+    @Override
+    public final SimScorer simScorer(SimWeight weight, LeafReaderContext context) throws IOException {
+        VSMStats stats = (VSMStats) weight;
+
+        return new VSMScorer(stats, context);
+    }
+
+
+
+    class VSMStats extends SimWeight {
+        private final String field;
+        private final TermStatistics[] termStats;
+        private float totalBoost;
+        public VSMStats(String field, TermStatistics[] termStats) {
+            this.field = field;
+            this.termStats = termStats;
+        }
+
+        @Override
+        public float getValueForNormalization() {
+            return 1f;
+        }
+
+        @Override
+        public void normalize(float v, float v1) {
+            this.totalBoost = v * v1;
+        }
+    }
+
+    final class VSMScorer extends SimScorer {
+        private final VSMStats stats;
+        private final LeafReaderContext context;
+        private final List<Explanation> explanations = new ArrayList<>();
+        public VSMScorer(VSMStats positionStats, LeafReaderContext context) throws IOException {
+            this.stats = positionStats;
+            this.context = context;
+        }
+
+        @Override
+        public float score(int doc, float freq)  {
+
+            return freq;
+        }
+
+        @Override
+        public float computeSlopFactor(int i) {
+
+            return 1f / (i + 1);
+        }
+
+        @Override
+        public float computePayloadFactor(int i, int i1, int i2, BytesRef bytesRef) {
+            return 1;
+        }
+
+        @Override
+        public Explanation explain(int doc, Explanation freq) {
+            return Explanation.match(
+                    score(doc, freq.getValue()),
+                    "score(doc=" + doc + ", freq=" + freq.getValue() + "), sum of:",
+                    explanations
+            );
+        }
+
+    }
+}
+```
+
+#### VSMSimilarityProvider.java
+
+```
+import org.apache.lucene.search.similarities.Similarity;
+import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.inject.assistedinject.Assisted;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.similarity.AbstractSimilarityProvider;
+import org.elasticsearch.index.similarity.SimilarityProvider;
+
+/**
+ * Created by chen jie on 4/1/17 10:29 AM.
+ */
+public class VSMSimilarityProvider extends AbstractSimilarityProvider {
+
+    private final VSMSimilarity similarity = new VSMSimilarity();
+
+    protected VSMSimilarityProvider(String name) {
+        super(name);
+    }
+
+    @Inject
+    public VSMSimilarityProvider(@Assisted String name, @Assisted Settings settings) {
+        super(name);
+    }
+
+    @Override
+    public String name() {
+        return "vsm";
+    }
+
+    @Override
+    public Similarity get() {
+        return similarity;
+    }
+}
+```
+
+对索引进行配置
+```
+PUT all_question_index_test
+{
+  "settings": {
+    "index": {
+      "similarity": {
+        "default": {
+          "type": "vsm"
+        }
+      }
+    },
+    "analysis": {
+      "analyzer": "whitespace"
+    }
+  }
+}
+```
+
+搜索
+
+```
+GET all_question_index_test/question/_search
+{
+    "query": {
+         "function_score": {
+             "query": {
+        "multi_match": {
+            "query" : "用 公 式 法 解 方 程 x 2 - 2 x - 3 0",
+            "fields" : ["content"]
+        }}, "functions": [
+        {
+          "script_score": {
+            "script" : {
+                        "inline" : "_score/doc['docmod'].value",
+                        "lang"   : "painless"
+            }
+          }
+        }
+      ]
+      }
+    }
+}
+```
+
+这里使用了docmod字段来存储文档的模。
+
+这样搜索一次只需要50ms，对于我们的业务，业务精度也从0.7（默认的BM25）上升到0.95。
+
+不过这样我们需要自己定义几个字段才能满足需求，建索引的请求和搜索请求耦合很大了。
+
+再对切词也做了修改，继续优化能达到0.99的精度。
+
+第一次ES研究到此结束。

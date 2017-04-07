@@ -1,0 +1,54 @@
+---
+layout:     post
+title:      "这面试发挥得好烂啊"
+subtitle:   ""
+date:       2017-02-16
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - coder
+---
+
+> Python脚本写写
+
+## 2017-04-06  Two Sum
+
+
+#### Question
+
+Given an array of integers, return indices of the two numbers such that they add up to a specific target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+Example:
+
+```
+Given nums = [2, 7, 11, 15], target = 9,
+
+Because nums[0] + nums[1] = 2 + 7 = 9,
+return [0, 1].
+```
+
+#### Solution
+
+```
+class Solution(object):
+    def twoSum(self, nums, target):
+        """
+        :type nums: List[int]
+        :type target: int
+        :rtype: List[int]
+        """
+        num_dict = {}
+        for i_index in xrange(len(nums)):
+            i = nums[i_index]
+            i0 = target - i
+            if i0 in num_dict:
+                return [num_dict[i0], i_index]
+            num_dict[i] = i_index
+
+
+        return None
+
+
+```
