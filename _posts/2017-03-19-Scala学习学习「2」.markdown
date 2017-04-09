@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "Scala学习记录「2」"
-subtitle:   "类型推断"
+subtitle:   " 编译优化"
 date:       2017-03-19
 author:     "Jie"
 header-img: "img/post-bg-scala-version.jpg"
@@ -44,9 +44,9 @@ You may wish to define T as +T instead. (SLS 4.5)
        f(x)
 ```
 
-写在一起，类型推断就能加入了下文信息自动把Array(new B)当成Array[A](new B)
+写在一起，就能加入了下文信息自动把Array(new B)当成Array[A](new B)
 
-如果不使用类型推断，f(C(new B))那就需要写成
+如果不写在一起，f(C(new B))那就需要写成
 ```
 val b: A = new B
 
@@ -68,5 +68,9 @@ res0: Int = 1
 
 ```
 
-## 类型推断算法
+## 编译
 
+```
+scala.this.Predef.println(f(scala.Array.apply[A](new B())((ClassTag.apply[A](classOf[TfIdf$$main$A]): scala.reflect.ClassTag[A]))))
+```
+在Array后面制定了A类型。

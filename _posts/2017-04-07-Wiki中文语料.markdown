@@ -1,0 +1,109 @@
+---
+layout:     post
+title:      "wiki预料使用「1」"
+subtitle:   " -- 处理处理"
+date:       2017-02-16
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+    - coder
+---
+
+> 很久之前就下了wiki中文预料，当时就只做了word2vec。可以做做其他的。
+
+有这么wiki这么大个预料，能做什么呢？
+
+先从文档相似度入手。给定一篇文档（新闻、报告...），能知道关键讲的什么，并能给出wiki中相关文章
+
+## 预处理
+
+首先是原始数据的处理,。
+> 处理参见http://www.52nlp.cn/%E4%B8%AD%E8%8B%B1%E6%96%87%E7%BB%B4%E5%9F%BA%E7%99%BE%E7%A7%91%E8%AF%AD%E6%96%99%E4%B8%8A%E7%9A%84word2vec%E5%AE%9E%E9%AA%8C/comment-page-1
+做了点改动，在Python里面分词然后编码为utf8再写入。 在Mac上繁简转换也报错zht2zhs.ini not found or not accessible.，这里需要替换为-c t2s.json。
+
+原文分了几部分，现在把繁简转换、编码、分词放在一起。
+
+```
+from gensim.corpora import WikiCorpus
+import jieba
+data = WikiCorpus(input_file, lemmatize=False, dictionary={})
+output = open(output_file, "w")
+def cut(str):
+    return " ".join(jieba.cut(str))
+
+def t2s(line):
+    return opencc.convert(b"".join(line).decode("utf-8"), config='t2s.json')
+
+for line in iter_data:
+    title = opencc.convert(line[0].decode("utf-8"), config='t2s.json')
+    output.write(title + " " + cut(t2s(line)) + "\n")
+```
+
+其次是停用词处理，这里就用idf筛选无效词。小于1的直接去掉。
+
+看看全语料idf 最低10个
+
+'外部', 0.9452591183849574
+'于', 0.9193400953235863
+'年', 0.7146749405249633
+'在', 0.40104916099974064
+'为', 0.53836286894243
+'有', 0.9470858426929526
+'与', 0.8071514075471966
+'的', 0.11320240832637747
+'是', 0.39737973543304406
+'和', 0.7625961050858583
+
+## LDA分析
+
+使用Python的gensim跑LDA好慢，只用了一个CPU，不知道哪里没配对。
+
+然后换Spark 机器学习包，参数默认，1000个主题。
+
+先用CountVectorizerModel做词映射，然后再带入训练。
+
+因为Spark的配置，要把单机集群打开，电脑跑的好有压力, task的shuffle数据都是5G左右，而且还报OOM。
+
+只能稍微调整一下GC参数，内存调大，减小线程数。
+
+#### 再次运行
+
+出现问题，使用online学习在初始化Gamma矩阵的时候OOM。
+
+#### 换个姿势再次运行
+
+然后调整到em, 跑了半天然后报OOM，而且中间电脑还报磁盘不足，这货OOM的时候居然占用了接近100G的大小的磁盘。
+
+看是
+```
+executor.Executor: 1 block locks were not released by TID = 257:
+```
+这种警告
+
+导致原因
+```
+http://stackoverflow.com/questions/40300732/error-in-using-mllib-function-als-in-spark
+```
+解决方法
+```
+https://github.com/apache/spark/pull/16513
+```
+恩，很好，warn配置就看不到这个日志了。
+
+#### 换回Python
+
+
+
+
+## 热点词
+
+todo
+
+## 文档主题抽取
+
+todo
+
+## 相似文档筛选
+
+todo
+
