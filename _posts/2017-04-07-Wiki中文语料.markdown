@@ -74,21 +74,21 @@ for line in iter_data:
 
 然后调整到em, 跑了半天然后报OOM，而且中间电脑还报磁盘不足，这货OOM的时候居然占用了接近100G的大小的磁盘。
 
-看是
+看是警告
 ```
-executor.Executor: 1 block locks were not released by TID = 257:
+ WARN executor.Executor: 1 block locks were not released by TID = 257:
 ```
-这种警告
 
-导致原因
-```
-http://stackoverflow.com/questions/40300732/error-in-using-mllib-function-als-in-spark
-```
+
 解决方法
 ```
 https://github.com/apache/spark/pull/16513
 ```
 恩，很好，warn配置就看不到这个日志了。
+
+Spark需要重新编译一下在做优化。
+
+todo
 
 #### 换回Python
 
