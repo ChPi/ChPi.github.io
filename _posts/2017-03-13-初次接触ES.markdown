@@ -186,6 +186,8 @@ public class TestScript extends Plugin implements ScriptPlugin {
 
 我们业务上这样搜索，当索引达到10w的时候就变得很慢，一次搜索需要5、600ms。只能改进，下面定制我们自己的搜索策略，替换es默认搜索BM25。
 
+> 这里业务需求变了，不是长度排序了。
+
 #### VSMPlugin.java
 ```
 import org.elasticsearch.index.IndexModule;

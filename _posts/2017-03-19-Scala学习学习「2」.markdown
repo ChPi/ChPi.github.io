@@ -73,4 +73,4 @@ res0: Int = 1
 ```
 scala.this.Predef.println(f(scala.Array.apply[A](new B())((ClassTag.apply[A](classOf[TfIdf$$main$A]): scala.reflect.ClassTag[A]))))
 ```
-在Array后面制定了A类型。
+在Array后面指定了A类型。
