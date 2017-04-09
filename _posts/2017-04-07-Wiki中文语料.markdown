@@ -6,7 +6,8 @@ date:       2017-04-07
 author:     "Jie"
 header-img: "img/post-bg-scala-version.jpg"
 tags:
-    - coder
+    - ML
+    - NLP
 ---
 
 > 很久之前就下了wiki中文预料，当时就只做了word2vec。可以做做其他的。
