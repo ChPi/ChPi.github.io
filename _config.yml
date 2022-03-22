@@ -5,7 +5,7 @@ header-img: img/home-bg.jpg
 email: chjie93@gmail.com
 description: "hey,man. "
 keyword: ""
-url: "xjiex.com"              # your host, for absolute URL
+# url: "xjiex.com"              # your host, for absolute URL
 baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 
 
