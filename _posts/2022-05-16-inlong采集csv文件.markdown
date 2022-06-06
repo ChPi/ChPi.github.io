@@ -14,27 +14,27 @@ tags:
 
 # 数据分组-新建接入
 
-![image-20220603142427727](../img/inlong/image-20220603142427727.png)
+![image-20220603142427727](/img/inlong/image-20220603142427727.png)
 
 下一步添加数据源和kafka，选择json
 
 >   调试看代码的时候发现DeserializationSchemaFactory没csv，就换成json
 
-![image-20220606230532972](../img/inlong/image-20220606230532972.png)
+![image-20220606230532972](/img/inlong/image-20220606230532972.png)
 
 流向接入kafka
 
-![image-20220606230713046](../img/inlong/image-20220606230713046.png)
+![image-20220606230713046](/img/inlong/image-20220606230713046.png)
 
 **kafka没有字段配置，需要手动数据库表stream_sink_field添加字段信息，不然输出空信息**
 
 # 审批管理-我的审批
 
-![image-20220529235642527](../img/inlong/image-20220529235642527.png)
+![image-20220529235642527](/img/inlong/image-20220529235642527.png)
 
 # 数据分组-配置成功
 
-![image-20220529235716714](../img/inlong/image-20220529235716714.png)
+![image-20220529235716714](/img/inlong/image-20220529235716714.png)
 
 当配置成功删除pulsar自动创建的订阅，因为与flink订阅冲突
 
@@ -63,5 +63,5 @@ echo {"a":1121,"b":34} > b.csv
 
 查看kafka消息，有了
 
-![image-20220606230013989](../img/inlong/image-20220606230013989.png)
+![image-20220606230013989](/img/inlong/image-20220606230013989.png)
 
