@@ -1,0 +1,131 @@
+---
+layout:     post
+title:      "Apache Inlong安装部署"
+subtitle:   " -- m1"
+date:       2022-05-16
+author:     "Jie"
+header-img: "img/post-bg-scala-version.jpg"
+tags:
+- Apache Inlong
+---
+## 编译
+* 下载源码
+```shell
+git clone https://github.com/ChPi/incubator-inlong.git
+```
+使用最新1.1版本代码
+* 编译
+```shell
+mvn clean install -DskipTests
+```
+
+## 部署
+
+将`mysql-connector`放入
+
+```shell
+inlong-agent/lib/
+inlong-audit/lib/
+inlong-manager/lib/
+inlong-tubemq-manager/lib/
+```
+
+修改配置
+
+```shell
+vim conf/inlong.conf
+```
+
+manager添加配置
+```shell
+# Flink host split by coma if more than one host, such as 'host1,host2'
+flink.rest.address=127.0.0.1
+# Flink port
+flink.rest.port=8081
+# Flink jobmanager port
+flink.jobmanager.port=6123
+# InLong Audit Proxy Address
+metrics.audit.proxy.hosts=127.0.0.1:10081
+```
+需要更改sed，mac这个sed和linux不一样
+不然启动会报错
+```shell
+sed: 1: "agent.properties": command a expects \ followed by text
+```
+
+修改inlong-deamon文件127.0.0.7
+```shell
+127.0.0.1
+```
+
+修改sed为gsed
+```shell
+gsed -i 's/sed -i/gsed -i/' bin/init-config.sh
+```
+
+修改./inlong-audit/bin/store-start.sh
+```shell
+#LOG_DIR="${basedir}/logs"
+LOG_DIR="${base_dir}/logs"
+```
+启动
+
+```shell
+bin/inlong-daemon start standalone
+```
+
+需要docker，下载docker
+
+dashbord自己去拉镜像，m1启动警告，自己打一个再说
+
+>   WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+
+```powershell
+mvn clean package -DskipTests -Pdocker -pl inlong-dashboard -am
+```
+
+再次启动
+```shell
+bin/inlong-daemon start standalone
+```
+
+登陆有问题，docker镜像ip映射
+
+>   [error] 10#10: *20 connect() failed (111: Connection refused) while connecting to upstream, client: 172.17.0.1, server: _, request: "POST /api/inlong/manager/anno/login HTTP/1.1", upstream: "http://127.0.0.1:8083/api/inlong/manager/anno/login", host: "localhost:8081", referrer: "http://localhost:8081/"
+
+算了，不用docker, 将inlong-daemon脚本docker启动注释了
+
+本地nginx添加配置
+
+```nginx
+server {
+        listen       8081;
+        server_name  _;
+        location /api {
+        proxy_pass      http://127.0.0.1:8083;
+        }
+        location ~ /*\..*$ {
+            root   /Users/jie/soft/inlong/inlong-dashboard;
+            index  index.html;
+        }
+
+}
+```
+
+登陆`http://localhost:8081/` 成功
+
+
+添加pulsar配置
+```shell
+curl --header "Content-Type: application/json" --request POST http://localhost:8083/api/inlong/manager/openapi/cluster/save --data '
+{
+        "name": "pulsar_cluster",
+        "type": "PULSAR",
+        "url": "pulsar://127.0.0.1:6650",
+        "token": "null",
+        "mqSetName": "default_set_name",
+        "extParams": "{\"pulsar_adminUrl\": \"http://127.0.0.1:8080\"}",
+        "inCharges": "admin",
+        "creator": "admin"
+}'
+```
