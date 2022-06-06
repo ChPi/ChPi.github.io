@@ -9,6 +9,10 @@ tags:
 - Apache Inlong
 ---
 
+* flink-1.13.6
+* apache-pulsar-2.10.0
+* apache-inlong-1.1.0
+
 部署完成开始上手，先来个本地csv到kafka
 > 基于1.1版本，不了解没使用过flink、pulsar, 跑通不容易，最开始本地csv到kafka一直没成功，经过几天调试代码熟悉，终于成功，下面步骤
 
