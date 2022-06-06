@@ -10,7 +10,7 @@ tags:
 ---
 
 部署完成开始上手，先来个本地csv到kafka
-> 基于1.1版本, 跑通不容易，最开始本地csv到kafka一直没成功，经过几天调试代码熟悉，终于成功，下面步骤
+> 基于1.1版本，不了解没使用过flink、pulsar, 跑通不容易，最开始本地csv到kafka一直没成功，经过几天调试代码熟悉，终于成功，下面步骤
 
 # 数据分组-新建接入
 
@@ -36,9 +36,8 @@ tags:
 
 ![image-20220529235716714](/img/inlong/image-20220529235716714.png)
 
-当配置成功删除pulsar自动创建的订阅，因为与flink订阅冲突
+consumer和reader差异，当配置成功删除pulsar自动创建的订阅，因为与flink订阅冲突，flink job报错
 
->   ```
 >   org.apache.pulsar.client.api.PulsarClientException$NotAllowedException: Durable subscription with the same name already exists.
 >   	at org.apache.pulsar.client.api.PulsarClientException.unwrap(PulsarClientException.java:1001)
 >   	at org.apache.pulsar.client.impl.ReaderBuilderImpl.create(ReaderBuilderImpl.java:78)
@@ -47,9 +46,6 @@ tags:
 >   	at org.apache.flink.streaming.api.operators.StreamSource.run(StreamSource.java:104)
 >   	at org.apache.flink.streaming.api.operators.StreamSource.run(StreamSource.java:60)
 >   	at org.apache.flink.streaming.runtime.tasks.SourceStreamTask$LegacySourceFunctionThread.run(SourceStreamTask.java:269)
->   
->   ```
->
 
 # 测试数据
 
