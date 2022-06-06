@@ -9,12 +9,12 @@ tags:
 - Apache Inlong
 ---
 ## 编译
-* 下载源码
+下载源码
 ```shell
 git clone https://github.com/ChPi/incubator-inlong.git
 ```
 使用最新1.1版本代码
-* 编译
+编译
 ```shell
 mvn clean install -DskipTests
 ```
