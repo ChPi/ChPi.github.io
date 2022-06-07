@@ -53,15 +53,12 @@ metrics.audit.proxy.hosts=127.0.0.1:10081
 sed: 1: "agent.properties": command a expects \ followed by text
 ```
 
-修改inlong-deamon文件127.0.0.7
-```shell
-127.0.0.1
-```
-
 修改sed为gsed
 ```shell
 gsed -i 's/sed -i/gsed -i/' bin/init-config.sh
 ```
+
+修改inlong-deamon文件127.0.0.7地址为127.0.0.1
 
 修改./inlong-audit/bin/store-start.sh
 ```shell
