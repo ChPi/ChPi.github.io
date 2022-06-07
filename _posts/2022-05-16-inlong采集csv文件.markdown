@@ -42,14 +42,16 @@ tags:
 
 consumer和reader差异，当配置成功删除pulsar自动创建的订阅，因为与flink订阅冲突，flink job报错
 
->   org.apache.pulsar.client.api.PulsarClientException$NotAllowedException: Durable subscription with the same name already exists.
->   	at org.apache.pulsar.client.api.PulsarClientException.unwrap(PulsarClientException.java:1001)
->   	at org.apache.pulsar.client.impl.ReaderBuilderImpl.create(ReaderBuilderImpl.java:78)
->   	at org.apache.inlong.sort.flink.pulsar.PulsarUtils.createReader(PulsarUtils.java:123)
->   	at org.apache.inlong.sort.flink.pulsar.PulsarSourceFunction.run(PulsarSourceFunction.java:291)
->   	at org.apache.flink.streaming.api.operators.StreamSource.run(StreamSource.java:104)
->   	at org.apache.flink.streaming.api.operators.StreamSource.run(StreamSource.java:60)
->   	at org.apache.flink.streaming.runtime.tasks.SourceStreamTask$LegacySourceFunctionThread.run(SourceStreamTask.java:269)
+```
+   org.apache.pulsar.client.api.PulsarClientException$NotAllowedException: Durable subscription with the same name already exists.
+   	at org.apache.pulsar.client.api.PulsarClientException.unwrap(PulsarClientException.java:1001)
+   	at org.apache.pulsar.client.impl.ReaderBuilderImpl.create(ReaderBuilderImpl.java:78)
+   	at org.apache.inlong.sort.flink.pulsar.PulsarUtils.createReader(PulsarUtils.java:123)
+   	at org.apache.inlong.sort.flink.pulsar.PulsarSourceFunction.run(PulsarSourceFunction.java:291)
+   	at org.apache.flink.streaming.api.operators.StreamSource.run(StreamSource.java:104)
+   	at org.apache.flink.streaming.api.operators.StreamSource.run(StreamSource.java:60)
+   	at org.apache.flink.streaming.runtime.tasks.SourceStreamTask$LegacySourceFunctionThread.run(SourceStreamTask.java:269)
+```
 
 # 测试数据
 
